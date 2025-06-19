@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PsyCouple - Therapist Tech Tool Finder</title>
-    <!-- Favicon: Add your tab icon here -->
     <link rel="icon" type="image/x-icon" href="main/newfavicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -62,17 +61,50 @@
             object-fit: contain;
             display: inline-block;
         }
+        /* Center the middle logo container */
+        .psy-logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            flex: 1 1 0%;
+        }
+        .psy-logo-img {
+            width: 180px;
+            max-width: 90vw;
+            height: auto;
+            margin: 0 auto;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .psy-logo-img {
+                width: 140px;
+            }
+        }
     </style>
 </head>
 <body class="text-gray-700">
 
     <nav class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-50">
         <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <div class="text-2xl font-bold text-gray-800 ml-2">Therapist Tech<span class="text-teal-600">Finder</span></div>
+            <div class="flex flex-col md:flex-row items-center md:justify-between py-4">
+                <!-- Left: Title -->
+                <div class="text-2xl font-bold text-gray-800 flex-1 text-center md:text-left mb-2 md:mb-0">
+                    Therapist Tech<span class="text-teal-600">Finder</span>
                 </div>
-                <div class="hidden md:flex space-x-6">
+                <!-- Center: PsyCouple Logo -->
+                <div class="psy-logo-container my-2 md:my-0">
+                    <!-- Use the uploaded image as logo -->
+                    <img src="main/psycouple_logo.png" alt="PsyCouple Logo" class="psy-logo-img">
+                </div>
+                <!-- Right: Nav Links -->
+                <div class="hidden md:flex flex-1 justify-end space-x-6">
+                    <a href="#explorer" class="hover:text-teal-600">Tool Explorer</a>
+                    <a href="#analysis" class="hover:text-teal-600">Price Analysis</a>
+                    <a href="#insights" class="hover:text-teal-600">Key Insights</a>
+                </div>
+                <!-- Mobile Menu -->
+                <div class="flex md:hidden w-full justify-center mt-3 space-x-6">
                     <a href="#explorer" class="hover:text-teal-600">Tool Explorer</a>
                     <a href="#analysis" class="hover:text-teal-600">Price Analysis</a>
                     <a href="#insights" class="hover:text-teal-600">Key Insights</a>
