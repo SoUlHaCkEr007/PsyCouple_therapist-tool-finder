@@ -130,17 +130,24 @@
             </p>
 
             <div class="mt-8 text-left max-w-3xl mx-auto border-t border-gray-200 pt-8">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">Explanation of Key Terms:</h3>
-                <ul class="list-disc list-inside space-y-2 text-gray-700">
-                    <li><strong class="text-teal-600">HIPAA:</strong> (Health Insurance Portability and Accountability Act) - A U.S. federal law that sets national standards for protecting patient health information from disclosure without the patient's consent or knowledge.</li>
-                    <li><strong class="text-teal-600">GDPR:</strong> (General Data Protection Regulation) - A comprehensive data privacy law from the European Union (EU) that gives individuals more control over their personal data. It applies to organizations anywhere that process personal data of EU/UK residents.</li>
-                    <li><strong class="text-teal-600">Digital Personal Data Protection Act, 2023 (DPDP Act):</strong> India's data protection law, similar to GDPR, which regulates the processing of digital personal data and aims to protect individual privacy.</li>
-                    <li><strong class="text-teal-600">PIPEDA:</strong> (Personal Information Protection and Electronic Documents Act) - Canada's federal law governing how private sector organizations collect, use, and disclose personal information in commercial activities.</li>
-                    <li><strong class="text-teal-600">SOC2:</strong> (System and Organization Controls 2) - A voluntary audit report that evaluates a service organization's information security system based on the Trust Services Criteria (security, availability, processing integrity, confidentiality, and privacy). It indicates a vendor's commitment to data protection.</li>
-                    <li><strong class="text-teal-600">Business Associate Agreement (BAA):</strong> A legal contract between a HIPAA-covered entity (like a therapist) and a business associate (a technology vendor) that outlines how the business associate will safeguard Protected Health Information (PHI) in compliance with HIPAA. This is crucial for any tool handling client health data.</li>
-                    <li><strong class="text-teal-600">Protected Health Information (PHI):</strong> Any information about health status, provision of healthcare, or payment for healthcare that is created or received by a covered entity and can be linked to a specific individual.</li>
-                </ul>
-            </div>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <button id="key-terms-accordion-header" class="w-full text-left p-4 flex justify-between items-center font-semibold text-gray-800 hover:bg-gray-50 transition">
+            <span>Explanation of Key Terms:</span>
+            <span id="key-terms-arrow" class="transform transition-transform duration-300">&#9662;</span>
+        </button>
+        <div id="key-terms-accordion-content" class="accordion-content">
+            <ul class="list-disc list-inside space-y-2 text-gray-700 p-4 pt-0">
+                <li><strong class="text-teal-600">HIPAA:</strong> (Health Insurance Portability and Accountability Act) - A U.S. federal law that sets national standards for protecting patient health information from disclosure without patient consent or knowledge.</li>
+                <li><strong class="text-teal-600">GDPR:</strong> (General Data Protection Regulation) - A comprehensive data privacy law from the European Union (EU) that gives individuals more control over their personal data. It applies to any company processing the data of EU residents.</li>
+                <li><strong class="text-teal-600">Digital Personal Data Protection Act, 2023 (DPDP Act):</strong> India's data protection law, similar to GDPR, which regulates the processing of digital personal data and aims to protect individual privacy.</li>
+                <li><strong class="text-teal-600">PIPEDA:</strong> (Personal Information Protection and Electronic Documents Act) - Canada's federal law governing how private sector organizations collect, use, and disclose personal information in the course of commercial business.</li>
+                <li><strong class="text-teal-600">SOC2:</strong> (System and Organization Controls 2) - A voluntary audit report that evaluates a service organization's information security system based on the Trust Services Criteria (security, availability, processing integrity, confidentiality, and privacy).</li>
+                <li><strong class="text-teal-600">Business Associate Agreement (BAA):</strong> A legal contract between a HIPAA-covered entity (like a therapist) and a business associate (a technology vendor) that outlines how the business associate will safeguard PHI and comply with HIPAA regulations.</li>
+                <li><strong class="text-teal-600">Protected Health Information (PHI):</strong> Any information about health status, provision of healthcare, or payment for healthcare that is created or received by a covered entity and can be linked to a specific individual.</li>
+            </ul>
+        </div>
+    </div>
+</div>
         </section>
 
         <section id="explorer" class="py-12">
@@ -667,6 +674,23 @@
             initAccordion();
             initTooltips(); // Initialize tooltips after DOM is ready
         });
+        // Accordion for Explanation of Key Terms
+document.addEventListener('DOMContentLoaded', function() {
+    const header = document.getElementById('key-terms-accordion-header');
+    const content = document.getElementById('key-terms-accordion-content');
+    const arrow = document.getElementById('key-terms-arrow');
+    if (header && content && arrow) {
+        header.addEventListener('click', function() {
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                arrow.style.transform = 'rotate(180deg)';
+            }
+        });
+    }
+});
     </script>
 </body>
 </html>
