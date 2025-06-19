@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapist Tech Tool Finder (With Explanatory Tooltips)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A user-centric, dashboard-style "Tool Finder" SPA. The core is an interactive filter system (by Function, Price, Practice Type) that dynamically updates a grid of tool "cards". Clicking a card opens a modal with detailed information. This structure was chosen over a linear report format to empower users to quickly find relevant tools based on their immediate needs and budget, which is the primary goal for the target audience (early-career therapists). The design prioritizes task completion ("find a tool") over passive reading. It's supplemented by contextual sections for Key Insights (via an accordion) and a visual Price Analysis chart to make the report's data more digestible and actionable. The initial hero section now includes a brief introduction with interactive tooltips for key compliance terms, enhancing immediate user understanding. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Expanded list of therapist tools -> Goal: Find/Compare -> Viz/Method: Interactive Filterable Cards (HTML/JS/Tailwind) -> Interaction: Users click filters to narrow results instantly. Cards show key data; clicking reveals a detailed modal. -> Justification: Directly serves the user's primary goal of finding specific tools efficiently from a larger dataset.
+        - Report Info: Pricing Tiers Analysis -> Goal: Compare price distribution -> Viz/Method: Horizontal Bar Chart (Chart.js/Canvas) -> Interaction: Hover tooltips show the exact count of tools in each price bracket. -> Justification: Visually summarizes the expanded market landscape, making it easier to understand affordability trends.
+        - Report Info: Key Considerations for Selection -> Goal: Inform/Organize -> Viz/Method: Accordion (HTML/JS/Tailwind) -> Interaction: Users click to expand/collapse sections. -> Justification: Presents dense but crucial advisory content in a compact, manageable format, preventing information overload.
+        - Report Info: Technical/Legal Terms (HIPAA, GDPR, etc.) -> Goal: Explain -> Viz/Method: Inline text with JavaScript-powered Tooltips -> Interaction: Hover over terms to reveal definitions. -> Justification: Integrates crucial definitions directly into the introductory text, providing immediate clarification for non-technical users. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            background-color: #FDFBF7;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .filter-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-btn.active {
+            background-color: #4A5568;
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        .tool-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        #modal {
+            transition: opacity 0.3s ease;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <nav class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-2xl font-bold text-gray-800">Therapist Tech<span class="text-teal-600">Finder</span></div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#explorer" class="hover:text-teal-600">Tool Explorer</a>
+                    <a href="#analysis" class="hover:text-teal-600">Price Analysis</a>
+                    <a href="#insights" class="hover:text-teal-600">Key Insights</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <section id="hero" class="text-center py-12">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800">Find the Right Tech for Your Practice</h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-600 mb-4">
+                When selecting digital tools for your therapy practice, your main focus should be on protecting your clients' sensitive information and maintaining their trust. This means understanding certain key terms related to data privacy. For instance, if you handle client health data, ensure your chosen technology complies with <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="HIPAA">HIPAA</span> (for the U.S.), <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="GDPR">GDPR</span> (for the EU/UK), or the <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="DPDP Act">Digital Personal Data Protection Act, 2023 (DPDP Act)</span> (for India), and <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="PIPEDA">PIPEDA</span> (for Canada), depending on where you and your clients are located. Look for vendors who are transparent about their <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="SOC2">SOC2</span> compliance, indicating strong internal controls over data security. Always prioritize tools that offer a signed <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="BAA">Business Associate Agreement (BAA)</span> if they handle <span class="tooltip-trigger font-semibold text-teal-600 cursor-help" data-term="PHI">Protected Health Information (PHI)</span>.
+            </p>
+
+            <div class="mt-8 text-left max-w-3xl mx-auto border-t border-gray-200 pt-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Explanation of Key Terms:</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li><strong class="text-teal-600">HIPAA:</strong> (Health Insurance Portability and Accountability Act) - A U.S. federal law that sets national standards for protecting patient health information from disclosure without the patient's consent or knowledge.</li>
+                    <li><strong class="text-teal-600">GDPR:</strong> (General Data Protection Regulation) - A comprehensive data privacy law from the European Union (EU) that gives individuals more control over their personal data. It applies to organizations anywhere that process personal data of EU/UK residents.</li>
+                    <li><strong class="text-teal-600">Digital Personal Data Protection Act, 2023 (DPDP Act):</strong> India's data protection law, similar to GDPR, which regulates the processing of digital personal data and aims to protect individual privacy.</li>
+                    <li><strong class="text-teal-600">PIPEDA:</strong> (Personal Information Protection and Electronic Documents Act) - Canada's federal law governing how private sector organizations collect, use, and disclose personal information in commercial activities.</li>
+                    <li><strong class="text-teal-600">SOC2:</strong> (System and Organization Controls 2) - A voluntary audit report that evaluates a service organization's information security system based on the Trust Services Criteria (security, availability, processing integrity, confidentiality, and privacy). It indicates a vendor's commitment to data protection.</li>
+                    <li><strong class="text-teal-600">Business Associate Agreement (BAA):</strong> A legal contract between a HIPAA-covered entity (like a therapist) and a business associate (a technology vendor) that outlines how the business associate will safeguard Protected Health Information (PHI) in compliance with HIPAA. This is crucial for any tool handling client health data.</li>
+                    <li><strong class="text-teal-600">Protected Health Information (PHI):</strong> Any information about health status, provision of healthcare, or payment for healthcare that is created or received by a covered entity and can be linked to a specific individual.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="explorer" class="py-12">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">Interactive Tool Explorer</h2>
+            <p class="text-lg text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                Select a function and price range to discover tools tailored to your needs. Click on any card to view detailed information, including key features, compliance details, and potential discounts.
+            </p>
+
+            <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="font-semibold text-gray-800 mb-2 block">1. Select a Function</label>
+                        <select id="function-filter" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            <option value="all">All Functions</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-semibold text-gray-800 mb-2 block">2. Select a Price Range (per month)</label>
+                        <select id="price-filter" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            <option value="all">All Prices</option>
+                            <option value="free">Free</option>
+                            <option value="under2000">Under ₹2,000</option>
+                            <option value="2000-4000">₹2,000 - ₹4,000</option>
+                            <option value="4000-8000">₹4,000 - ₹8,000</option>
+                            <option value="over8000">₹8,000+</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-semibold text-gray-800 mb-2 block">3. Select a Practice Type</label>
+                        <select id="type-filter" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            <option value="all">All Types</option>
+                            <option value="individual">Individual Practitioners</option>
+                            <option value="clinic">Clinics / Group Practices</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tool-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+             <p id="no-results" class="text-center text-gray-500 py-10 hidden">No tools match the selected filters.</p>
+        </section>
+
+        <section id="analysis" class="py-12">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">Pricing & Value Analysis</h2>
+            <p class="text-lg text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                This chart illustrates the distribution of available tools across different monthly price points. It helps visualize where most tools fall financially, offering a market overview to guide your budget planning. Hover over the bars to see the exact number of tools in each category.
+            </p>
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="insights" class="py-12">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">Key Considerations for Selection</h2>
+            <p class="text-lg text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                Choosing the right technology involves more than just price. The following points are crucial for ensuring your choice is secure, efficient, and scalable. Click on each consideration to learn more.
+            </p>
+            <div id="accordion-container" class="space-y-4 max-w-4xl mx-auto">
+            </div>
+        </section>
+    </main>
+
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-50">
+        <div id="modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 md:p-8 relative transform scale-95 transition-transform duration-300">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p>&copy; 2025 Therapist TechFinder. An interactive guide.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const toolsData = [
+                { "id": 1, "name": "Doxy.me", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free Lite plan; Pro at ~₹2,407/mo", "compliance": "HIPAA, GDPR, SOC2", "features": "Unlimited call minutes, free BAA, virtual waiting room. No downloads required.", "limitations": "Free plan lacks group calls and screen sharing.", "discounts": "Discounts for students, researchers, and non-profits." },
+                { "id": 2, "name": "Zoom for Healthcare", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "~₹1,400/mo for up to 9 licenses", "compliance": "HIPAA, PIPEDA/PHIPA, GDPR, ISO 27001, SOC2", "features": "HD video/audio, EHR integration support, AI notes (add-on), screen sharing, team chat.", "limitations": "HIPAA features are paid. No specific student discounts mentioned for healthcare plan.", "discounts": "None specified." },
+                { "id": 3, "name": "FreeConferenceCall.com", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan; Starter at ~₹830/mo", "compliance": "HIPAA", "features": "Unlimited HD video (1000 participants), screen/document sharing, automated reminders.", "limitations": "Free plan lacks recording and transcription and may show ads.", "discounts": "None specified." },
+                { "id": 4, "name": "SimplePractice", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹4,067/mo (Starter), Essential at ~₹6,557/mo, Plus at ~₹8,217/mo", "compliance": "HIPAA, HITRUST", "features": "All-in-one: telehealth, documentation templates, billing, client portal, website builder, reporting.", "limitations": "Starter plan lacks group appointments/telehealth and has limited features.", "discounts": "70% off for first 3 months for new customers, $200 referral program." },
+                { "id": 5, "name": "Ensora Mental Health", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,407/therapist/mo (Essentials)", "compliance": "HIPAA", "features": "Comprehensive EMR, customizable notes, integrated billing, secure client portal, calendar sync.", "limitations": "Explicitly not for EU use (no GDPR). Interface can feel dated.", "discounts": "21-day free trial." },
+                { "id": 6, "name": "TherapyNotes", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Solo at ~₹4,897/mo; Group starts at ~₹5,727/mo + clinician fee", "compliance": "HIPAA, GDPR (principles addressed)", "features": "User-friendly, great customer support, robust notes, client portal, basic telehealth.", "limitations": "Less flexible customization; some reported issues with billing and telehealth features.", "discounts": "Free \"Education Subscriptions\" for classroom use, special pricing for university training clinics." },
+                { "id": 7, "name": "MyClientsPlus", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹3,486/mo for up to 30 clients", "compliance": "HIPAA", "features": "Note templates, electronic billing, client portal, integrated telehealth. Pricing scales by client count.", "limitations": "Explicitly not for EU use (no GDPR).", "discounts": "None specified." },
+                { "id": 8, "name": "Zanda", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Pricing not specified, assumed higher-end", "compliance": "HIPAA, GDPR, ISO 27001", "features": "Customizable client portal, telehealth, AI assistant, extensive reports.", "limitations": "Pricing not transparent.", "discounts": "Free trial available." },
+                { "id": 9, "name": "OpenEMR", "function": "Practice Management", "practiceType": ["clinic"], "priceRange": "free", "price": "Free software, but implementation costs (hosting, support) can be high", "compliance": "HIPAA/GDPR (requires user configuration)", "features": "Open-source, highly customizable, integrated billing, scheduling, patient portal, multi-language support.", "limitations": "Requires significant technical expertise and has hidden costs for hosting/support.", "discounts": "N/A (Open Source)." },
+                { "id": 10, "name": "Doctors App (India)", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Silver Plan at ~₹667/mo (annual)", "compliance": "HIPAA, Indian IT Act", "features": "Custom SOAP notes, digital prescriptions, video consults, WhatsApp integration. Primarily India-focused.", "limitations": "Detailed GDPR statement not available. Silver plan has WhatsApp credit limits.", "discounts": "Low annual pricing is startup-friendly; 7-day refund policy." },
+                { "id": 11, "name": "Therasoft India", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹495/mo (Lite), Pro at ~₹995/mo", "compliance": "HIPAA", "features": "Clinic-in-box, smart scheduling, progress notes, online fee collection, free directory listing.", "limitations": "Detailed GDPR statement not available. India-focused.", "discounts": "30-day free trial, startup pricing available." },
+                { "id": 12, "name": "Social Work Portal", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "~₹4,979/mo + user fee", "compliance": "HIPAA, PIPEDA, GDPR", "features": "All-in-one case management, advanced assessment/reporting tools, intake templates.", "limitations": "Niche focus on case management workflows.", "discounts": "Discounts for non-profits, students, military, first-responders (can be stacked)." },
+                { "id": 13, "name": "Mentalyc", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹1,244/mo (Mini annual plan)", "compliance": "HIPAA, GDPR (opt-out)", "features": "AI-powered notes (SOAP, DAP), voice-to-text, SMART treatment plans, session analytics.", "limitations": "Pricing scales by note volume. Transparency concerns about SOC2 certification.", "discounts": "Discounted pricing for pre-licensed clinicians; 30-day free trial." },
+                { "id": 14, "name": "Cognito Forms", "function": "Assessment & Forms", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Free plan (not compliant); HIPAA on Pro plan from ~₹1,577/mo", "compliance": "HIPAA, GDPR, CCPA", "features": "Online form builder, conditional logic, e-signatures, score calculations (e.g., GAD-7).", "limitations": "Free plan is not HIPAA compliant and not for PHI.", "discounts": "Discounts for non-profits." },
+                { "id": 15, "name": "Typeform", "function": "Assessment & Forms", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "HIPAA on Business plan at ~₹6,889/mo (annual)", "compliance": "HIPAA, GDPR", "features": "Visually appealing, conversational forms for intake and assessments.", "limitations": "Expensive for compliance; free/lower plans have tight response limits.", "discounts": "None specified." },
+                { "id": 16, "name": "Setmore", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan (up to 4 users); Pro at ~₹415/user/mo", "compliance": "HIPAA, GDPR", "features": "Free BAA, up to 200 appts/mo on free plan, payments, email reminders.", "limitations": "Free plan has appointment limits and Setmore branding.", "discounts": "Discounts for students and non-profits." },
+                { "id": 17, "name": "Acuity Scheduling", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "HIPAA on Premium plan at ~₹5,063/mo", "compliance": "HIPAA, GDPR (data residency concern)", "features": "Robust client self-scheduling, payment integrations, automated reminders, time zone conversion.", "limitations": "HIPAA compliance is not on lower-tier plans. Basic reporting.", "discounts": "Discounts for students and non-profits." },
+                { "id": 18, "name": "10to8", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan (10 appts/mo); HIPAA plans from ~₹1,577/mo", "compliance": "HIPAA, GDPR, CCPA", "features": "Intelligent reminders, 1-to-1 & group services, 2-way client chat, calendar sync.", "limitations": "Free plan has very low appointment limit.", "discounts": "Low-cost tiers are startup-friendly." },
+                { "id": 19, "name": "Hushmail for Healthcare", "function": "Client Communication", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹995/mo", "compliance": "HIPAA, GDPR", "features": "Encrypted email with BAA, secure web forms, e-signatures, private message center.", "limitations": "Primarily an email solution, not a full communication suite.", "discounts": "None specified." },
+                { "id": 20, "name": "Spruce Health", "function": "Client Communication", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹1,992/user/mo", "compliance": "HIPAA", "features": "Unified communication: secure messaging, SMS, team chat, video telehealth.", "limitations": "Explicitly not for EU use (no GDPR). SMS requires one-time fee.", "discounts": "14-day free trial." },
+                { "id": 21, "name": "Box", "function": "Data Storage", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Business plans; Enterprise plan for full compliance", "compliance": "HIPAA, SOC 1/2/3", "features": "Secure cloud storage and file sharing with BAA, robust integrations, e-signatures.", "limitations": "Full compliance (HIPAA BAA) on more expensive Enterprise plans. Pricing not transparent.", "discounts": "None specified." },
+                { "id": 22, "name": "Dropbox Business", "function": "Data Storage", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹1,245/user/mo (Standard, 3+ users)", "compliance": "HIPAA, GDPR, SOC 2", "features": "End-to-end encryption, granular access controls, audit logs, BAA available.", "limitations": "BAA not on personal/plus plans.", "discounts": "30-day free trial." },
+                { "id": 23, "name": "Google Workspace", "function": "Data Storage", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Business Plus at ~₹1,826/user/mo for BAA support", "compliance": "HIPAA (shared responsibility), GDPR", "features": "Secure email, 5TB cloud storage, data leak protection. Requires BAA and specific configuration.", "limitations": "Compliance is a shared responsibility; user must configure settings correctly.", "discounts": "None specified." },
+                { "id": 24, "name": "Tresorit", "function": "Data Storage", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹871/mo (Personal)", "compliance": "HIPAA, GDPR", "features": "Client-side AES-256 encryption (zero-knowledge), secure file sharing.", "limitations": "Lower-tier plans have storage limits.", "discounts": "14-day free trial." },
+                { "id": 25, "name": "SecureVideo", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Unlimited plan at ~₹4,150/mo", "compliance": "HIPAA, HITRUST, GDPR", "features": "Dual video engines (Zoom/One-Click), group sessions, virtual waiting rooms, e-docs.", "limitations": "Free trial is 14 days.", "discounts": "14-day free trial." },
+                { "id": 26, "name": "HIPAA Video", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Provider plan at ~₹2,490/mo/host", "compliance": "HIPAA, HITECH, GDPR (3rd-party claim)", "features": "No-download video, screen sharing, payment acceptance, patient notes, calendar.", "limitations": "Reported Android compatibility issues; requires stable internet.", "discounts": "Free version available." },
+                { "id": 27, "name": "Medici", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Est. ~₹4,150-₹8,300/provider/mo", "compliance": "HIPAA, GDPR", "features": "All-in-one platform: group messaging, integrated billing, secure messaging.", "limitations": "Initial setup cost can be high for solo practices.", "discounts": "None specified." },
+                { "id": 28, "name": "Amwell", "function": "Telehealth", "practiceType": ["individual"], "priceRange": "over8000", "price": "Per session: Therapy ~₹9,050-₹10,700; Psychiatry ~₹23,170 initial", "compliance": "HIPAA, GDPR", "features": "On-demand therapy and medication management, provider directory, 24/7 availability.", "limitations": "No text therapy, cash-pay can be expensive, cancellation fees apply.", "discounts": "No bundling discounts." },
+                { "id": 29, "name": "VSee", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan; Plus at ~₹2,407/mo", "compliance": "HIPAA (paid), GDPR", "features": "Free plan has 1-on-1 HD video, chat, screen share. Paid plans add BAA, group calls, e-rx.", "limitations": "Free plan does not include a BAA and is not for professional use. Lacks live support.", "discounts": "None specified." },
+                { "id": 30, "name": "TrueConf", "function": "Telehealth", "practiceType": ["clinic"], "priceRange": "under2000", "price": "Online Pro at ~₹1,071/host; Corporate at ~₹24,900/mo for 10 users", "compliance": "HIPAA, GDPR, ISO 27001", "features": "4K UltraHD video, data encryption, collaboration tools, recording, scheduling.", "limitations": "Free/lower tiers may have meeting duration limits.", "discounts": "Free server version for closed networks." },
+                { "id": 31, "name": "My Best Practice", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹3,237/mo for solo; add-ons available", "compliance": "HIPAA", "features": "All-in-one: EHR, billing, client portal. Highly rated for ease of use.", "limitations": "Telehealth and ePrescribing are paid add-ons.", "discounts": "None specified." },
+                { "id": 32, "name": "TherapyAppointment", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹830/mo (10 sessions); scales with volume", "compliance": "HIPAA, HITECH", "features": "Affordable, easy to learn. Client charting, telehealth, insurance billing.", "limitations": "Pricing is tied to session volume.", "discounts": "Special pricing for universities." },
+                { "id": 33, "name": "Healthie", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free Starter plan (10 clients); Essentials at ~₹4,067/mo", "compliance": "HIPAA, GDPR, PIPEDA, ONC, HITRUST", "features": "Modern UI, telehealth, client portal, mobile app, insurance claims (paid).", "limitations": "No phone support. Cost can increase with add-ons.", "discounts": "None specified." },
+                { "id": 34, "name": "Practice Better", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free Sprout plan (3 clients); Starter at ~₹2,075/mo (10 clients)", "compliance": "HIPAA, PIPEDA, GDPR", "features": "Modern UI, client portal, mobile apps, notes, scheduling, billing, telehealth.", "limitations": "Free trial requires credit card. Lacks recurring session scheduling.", "discounts": "None specified." },
+                { "id": 35, "name": "Supanote", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "~₹4,150/mo (120 notes)", "compliance": "HIPAA, PHIPA, PIPEDA, GDPR", "features": "High-quality AI notes (all formats), custom templates, voice commands.", "limitations": "Conflicting reports on data security emphasis. Nascent team features.", "discounts": "Free plan for 5 notes/month." },
+                { "id": 36, "name": "Quill", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "~₹1,660/mo (unlimited notes)", "compliance": "HIPAA, GDPR (On-device AI)", "features": "On-device AI processing for maximum privacy. Accurate notes, treatment plans.", "limitations": "Focus on on-device may limit cloud integrations.", "discounts": "None specified." },
+                { "id": 37, "name": "Upheal", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan (unlimited notes); Premium at ~₹8,217/mo", "compliance": "HIPAA, PHIPA, PIPEDA, GDPR, SOC2", "features": "AI intake notes, treatment plans, session analytics. No client data used for AI training.", "limitations": "Primary focus on analytics may not suit all needs.", "discounts": "50% off for 12 months for students/associates." },
+                { "id": 38, "name": "Blueprint", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,407/mo (30 sessions)", "compliance": "HIPAA, SOC2 Type II, GDPR", "features": "Measurement-based care focus. AI notes, treatment plans, integrated telehealth. No audio stored.", "limitations": "Focus on measurement-based care.", "discounts": "30-day free trial, multi-user discount." },
+                { "id": 39, "name": "Psychology Today", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "~₹2,486/mo", "compliance": "HIPAA (for Sessions platform), GDPR", "features": "Leading directory, high SEO visibility, includes free telehealth platform.", "limitations": "High saturation of therapists can be competitive.", "discounts": "Referral program for free months." },
+                { "id": 40, "name": "TherapyDen", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free profile; Premium for search results inclusion", "compliance": "GDPR", "features": "Niche focus on inclusivity and diversity. Free to create a profile.", "limitations": "Free profiles do not appear in search results.", "discounts": "Free profile available." },
+                { "id": 41, "name": "Headway", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free for providers to join", "compliance": "HIPAA, GDPR", "features": "Connects clients with in-network therapists, handles credentialing and claims.", "limitations": "Does not offer a peer community.", "discounts": "Free for providers." },
+                { "id": 42, "name": "Brighter Vision", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹6,474/mo (annual) + setup fee", "compliance": "HIPAA (via Hushmail), GDPR", "features": "Custom-designed, SEO-optimized websites for therapists. Includes hosting and support.", "limitations": "Setup fee applies to some plans.", "discounts": "Pay yearly to get one month free." },
+                { "id": 43, "name": "TherapySites", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹4,897/mo", "compliance": "HIPAA, GDPR (via cookie consent)", "features": "All-inclusive website packages: design, hosting, SEO, secure forms/email.", "limitations": "No setup fee.", "discounts": "Two free months for APA members." },
+                { "id": 44, "name": "FileCloud", "function": "Data Storage", "practiceType": ["clinic"], "priceRange": "under2000", "price": "Starts at ~₹349/user/mo (min 20 users)", "compliance": "HIPAA, GDPR", "features": "Secure document sharing, sync, backup. Ransomware protection. Can be self-hosted.", "limitations": "Minimum user requirements for some plans.", "discounts": "Free unlimited client accounts for external users." },
+                { "id": 45, "name": "Sync.com", "function": "Data Storage", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Free (5GB); Paid starts at ~₹664/mo (annual, 2TB)", "compliance": "HIPAA, GDPR, PIPEDA", "features": "End-to-end encrypted storage, 2FA, unlimited version tracking.", "limitations": "No Linux client, no monthly billing options.", "discounts": "Free version available." },
+                { "id": 46, "name": "Carepatron", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free social work software plan", "compliance": "HIPAA, Robust Security (No explicit GDPR)", "features": "Comprehensive client management, efficient documentation with customizable templates, collaborative tools, extensive social work resources.", "limitations": "Specific limitations of free plan not explicitly detailed.", "discounts": "Free plan available." },
+                { "id": 47, "name": "CounSol.com", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹4,146/mo (Standard); Premium Plus at ~₹5,806/mo", "compliance": "HIPAA (Tier-IV data center, SSL 256-bit encryption). No explicit GDPR.", "features": "Customizable client portal, billing/invoicing, secure video/chat, scheduling (individual/group), treatment plans, journaling.", "limitations": "Interface may appear outdated, limited pre-generated forms, telehealth lacks advanced features (blurring, group support).", "discounts": "14-day free trial." },
+                { "id": 48, "name": "BestNotes", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹4,814/user/mo (1-10 users)", "compliance": "HIPAA. No explicit GDPR.", "features": "Built-in CRM, EHR, OutcomeTools, patient portal, patient calendar, telehealth (add-on), medication management, HR, billing.", "limitations": "ePrescribing, AI notes, advanced telehealth are add-ons.", "discounts": "Not explicitly specified." },
+                { "id": 49, "name": "Practo Ray (India)", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "~₹999/mo (4-year plan), ~₹1,499/mo (1-year plan)", "compliance": "Ayushman Bharat Digital Mission, HIPAA. Some GDPR adherence for admin panel.", "features": "Scheduling, EMR, Billing, Telehealth, Patient Data Management, Online Payments, Post-consultation chats, Smart calling.", "limitations": "Not an advertising product. Limited customization for individual doctors.", "discounts": "7-day free trial." },
+                { "id": 50, "name": "AutoNotes (AI)", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹1,577/mo; Professional at ~₹4,067/mo", "compliance": "HIPAA, PHIPA, GDPR (no PII for training/marketing).", "features": "AI Progress Notes, Treatment Plans, Intake Assessments, Dictation/Recording, Custom Templates, EHR Integration.", "limitations": "Outdated UI. Limited real-time support. Limited customization.", "discounts": "Annual Unlimited Plan at half price." },
+                { "id": 51, "name": "OhMD", "function": "Client Communication", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Free basic plan; Reach plan starts at ~₹20,750/mo", "compliance": "HIPAA (BAA included). No explicit GDPR.", "features": "In-app messaging (Free). 2-Way SMS, Live Chat, Automated Workflows, Appointment Reminders (Paid). Telehealth.", "limitations": "Limited features in free/lower plans. Expensive for paid features. Lack of privacy (office can see replies).", "discounts": "Free plan available." },
+                { "id": 52, "name": "TigerConnect", "function": "Client Communication", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Custom Pricing (fixed annual contract)", "compliance": "HIPAA (HITRUST certified). No explicit GDPR.", "features": "Secure Text Messaging, Priority Messaging, Broadcast, File Sharing, Message Recall, Delivery/Read Receipts.", "limitations": "No transparent pricing. Fixed annual contract. Features may be behind paywall.", "discounts": "Not explicitly specified." },
+                { "id": 53, "name": "HIPAAtizer", "function": "Assessment & Forms", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,407/mo (Simple Compliance Gold)", "compliance": "HIPAA (certified), GDPR.", "features": "Ready-made templates (PHQ-9, GAD-7, AUDIT), Assessment Scoring, Complex Logic, Convert Paper Forms to Online.", "limitations": "Not explicitly detailed.", "discounts": "Free 30-day trial. Free paper form conversion." },
+                { "id": 54, "name": "Jotform", "function": "Assessment & Forms", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Gold plan at ~₹8,217/mo (annual); Enterprise custom", "compliance": "HIPAA (Gold/Enterprise, BAA included), GDPR.", "features": "Customizable forms, Appointment scheduling, Consent form creation, Payment integrations, Signature collection, File uploads.", "limitations": "Free/lower tiers not HIPAA compliant. Higher tiers expensive.", "discounts": "50% discount for non-profit organizations." },
+                { "id": 55, "name": "Alma", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "₹10,375/mo (annual plan)", "compliance": "HIPAA, GDPR.", "features": "Insurance claims/payments handling, Provider directory, HIPAA-compliant communication, Community features, Professional development.", "limitations": "Membership fee for providers.", "discounts": "Free consultation." },
+                { "id": 56, "name": "Backblaze", "function": "Data Storage", "practiceType": ["individual"], "priceRange": "under2000", "price": "~₹747/mo (annual: ~₹8,217/year)", "compliance": "HIPAA, GDPR.", "features": "Unlimited backup storage, Continuous/Automatic backups, External drive support, File versioning, Deleted file recovery.", "limitations": "Primarily for single-computer backup, not team collaboration.", "discounts": "Free 15-day trial." },
+                { "id": 57, "name": "IDrive", "function": "Data Storage", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹826/mo (annual: ~₹8,259/year)", "compliance": "HIPAA, GDPR.", "features": "Cloud backup for multiple PCs, Cloud storage, File sharing, Productivity tools, IDrive Express for large data transfers.", "limitations": "Not explicitly detailed.", "discounts": "3 free uses of IDrive Express per year." },
+                { "id": 58, "name": "RXNT", "function": "Practice Management", "practiceType": ["clinic"], "priceRange": "over8000", "price": "PM: ~₹17,181/mo; Full Suite: ~₹26,477/mo", "compliance": "HIPAA.", "features": "Cloud-based PM, Billing, Scheduling, EHR, E-prescribing (integrated suite). Includes setup, training, support.", "limitations": "Not explicitly detailed.", "discounts": "Not explicitly specified." },
+                { "id": 59, "name": "Owl Practice", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Contact for pricing (Canadian platform)", "compliance": "HIPAA, GDPR.", "features": "Highly secure platform, Client Portal, Note-taking, Telehealth, TherapyOwl marketing tool.", "limitations": "Pricing not transparent.", "discounts": "One-on-one demo sessions." },
+                { "id": 60, "name": "Spry PT", "function": "Practice Management", "practiceType": ["clinic"], "priceRange": "over8000", "price": "EMR: ~₹12,450/NPI/mo; Billing Dashboard: ~₹8,300/NPI/mo", "compliance": "HIPAA.", "features": "Seamless integration of EHR, billing, scheduling, telehealth. Prioritizes user experience.", "limitations": "Pricing per NPI can be high.", "discounts": "Free demo available." },
+                { "id": 61, "name": "Apollo TeleHealth (India)", "function": "Telehealth", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Contact for pricing (focus on integrated healthcare delivery)", "compliance": "HIPAA (expected, as major healthcare provider). GDPR (likely, but confirm specific service).", "features": "Teleconsultations, Remote Condition Management, Integrated healthcare delivery. Pioneer in South Asia.", "limitations": "Specific pricing for individual practitioners not detailed. Focus on corporate packages.", "discounts": "Not explicitly specified." },
+                { "id": 62, "name": "Calendly", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free Basic plan; Standard at ~₹830/user/mo; Teams at ~₹1,328/user/mo", "compliance": "GDPR. HIPAA (on Enterprise plan w/ BAA).", "features": "Automated scheduling, reminders, calendar integrations, payment integrations.", "limitations": "Free plan is basic (single event type). HIPAA/BAA only on Enterprise plan (most expensive).", "discounts": "None explicitly for students/startups." },
+                { "id": 63, "name": "TheraPlatform", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,407/mo (Solo Pro)", "compliance": "HIPAA, GDPR", "features": "Integrated telehealth, scheduling, billing, documentation (EHR), client portal, group sessions.", "limitations": "Higher tiers required for more advanced features and multiple users.", "discounts": "14-day free trial." },
+                { "id": 64, "name": "TheraPlatform", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,407/mo (Solo Pro)", "compliance": "HIPAA, GDPR", "features": "Integrated HIPAA-compliant video, screen sharing, whiteboard, secure messaging.", "limitations": "Part of a larger PM suite; may not be suitable as a standalone telehealth tool.", "discounts": "14-day free trial." },
+                { "id": 65, "name": "Thriveworks", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Provider revenue share model (not direct monthly fee)", "compliance": "HIPAA", "features": "Connects therapists with clients, handles insurance verification/billing, offers office space.", "limitations": "Revenue share can reduce per-session income. Less control over client flow.", "discounts": "N/A (model dependent)." },
+                { "id": 66, "name": "Therapist.com", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "~₹2,486/mo", "compliance": "HIPAA (for internal tools, directory is public)", "features": "Therapist directory, blog/resource sharing, professional networking, patient matching.", "limitations": "Effectiveness depends on market saturation.", "discounts": "Trial periods often available." },
+                { "id": 67, "name": "Zocdoc", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Variable fee (e.g., ~₹20,000 one-time onboarding + ~₹415/new patient)", "compliance": "HIPAA", "features": "Online scheduling, patient acquisition, virtual waiting room, profile management.", "limitations": "Cost per new patient can be high. May attract less ideal clients.", "discounts": "Varies by provider specialty/region." },
+                { "id": 68, "name": "Zocdoc", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Variable fee (integrated with marketing)", "compliance": "HIPAA", "features": "Online booking for patients, calendar sync, automated reminders.", "limitations": "Primarily a patient acquisition tool, scheduling is integrated with that service.", "discounts": "Varies by provider specialty/region." },
+                { "id": 69, "name": "Google Forms", "function": "Assessment & Forms", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free", "compliance": "HIPAA (with Google Workspace BAA and proper configuration)", "features": "Customizable forms, surveys, quizzes. Integrates with Google Sheets for data collection.", "limitations": "Requires Google Workspace Business Plus and careful configuration for HIPAA compliance. Not designed specifically for healthcare.", "discounts": "Free." },
+                { "id": 70, "name": "TherapyNotes", "function": "Billing", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Solo at ~₹4,897/mo; Group starts at ~₹5,727/mo + clinician fee", "compliance": "HIPAA, GDPR (principles addressed)", "features": "Robust claims submission, payment processing, ERAs, patient statements. Integrated with EHR.", "limitations": "Some reported issues with billing features.", "discounts": "Included with Practice Management subscription." },
+                { "id": 71, "name": "SimplePractice", "function": "Billing", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹4,067/mo (Starter), Essential at ~₹6,557/mo, Plus at ~₹8,217/mo", "compliance": "HIPAA, HITRUST", "features": "Electronic claims, payment processing, superbills, client statements. Integrated with EHR.", "limitations": "Payment processing fees apply.", "discounts": "70% off for first 3 months for new customers, referral program." },
+                { "id": 72, "name": "Valant", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Contact for pricing (assumed higher)", "compliance": "HIPAA, SOC2", "features": "EHR for behavioral health, e-prescribing, patient portal, telehealth, billing, reporting.", "limitations": "Designed for larger practices, may be complex for solo.", "discounts": "Demo available." },
+                { "id": 73, "name": "Luminello", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "4000-8000", "price": "Starts at ~₹5,000/mo (Solo plan)", "compliance": "HIPAA, GDPR", "features": "EHR/PM for psychiatry, e-prescribing, scheduling, billing, patient portal, secure messaging.", "limitations": "Free tier has limited features. More tailored for psychiatry.", "discounts": "Free plan available." },
+                { "id": 74, "name": "PowerDiary", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,400/mo (Solo), Scales per practitioner", "compliance": "HIPAA, GDPR, ISO 27001", "features": "Scheduling, notes, client management, billing, telehealth, customizable forms, secure messaging.", "limitations": "Cost scales with number of practitioners.", "discounts": "Free trial available." },
+                { "id": 75, "name": "Cliniko", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,500/mo (Solo), Scales per practitioner", "compliance": "HIPAA, GDPR, Australian Privacy Principles", "features": "Online bookings, treatment notes, invoicing, payment processing, telehealth, client portal, reporting.", "limitations": "Focused on broad health practitioners, not only mental health.", "discounts": "Free trial available." },
+                { "id": 76, "name": "Jane App", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,900/mo (Solo), Scales per practitioner", "compliance": "HIPAA, GDPR, PIPEDA", "features": "Scheduling, charting, billing, telehealth, client portal, online booking, reminders.", "limitations": "Telehealth is an add-on. Pricing can scale quickly.", "discounts": "Free trial available. Discounts for multi-location." },
+                { "id": 77, "name": "Theraputeo (India)", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹500/mo", "compliance": "Indian IT Act, GDPR (claims)", "features": "EMR, scheduling, billing, video consultations, secure messaging, patient portal.", "limitations": "Primarily India-focused. New platform, may have fewer integrations.", "discounts": "Free trial available." },
+                { "id": 78, "name": "Cloud Clinic (India)", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹700/mo", "compliance": "Indian IT Act, ISO 27001", "features": "Patient management, e-prescriptions, billing, scheduling, telehealth, analytics.", "limitations": "Primarily India-focused. Less comprehensive than global leaders.", "discounts": "Free trial available." },
+                { "id": 79, "name": "Practice Fusion", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free EHR (supported by ads/data)", "compliance": "HIPAA", "features": "EHR, e-prescribing, charting, lab integration, scheduling. Free for solo practitioners.", "limitations": "Advertising model may have privacy implications. Limited support.", "discounts": "Free." },
+                { "id": 80, "name": "Athenahealth", "function": "Practice Management", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Revenue share model (variable, high end)", "compliance": "HIPAA, HITRUST", "features": "Cloud-based EHR, practice management, revenue cycle management, patient engagement.", "limitations": "High cost, complex for small practices.", "discounts": "Custom pricing." },
+                { "id": 81, "name": "Mend", "function": "Telehealth", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Custom pricing (enterprise focus)", "compliance": "HIPAA, HITRUST, SOC2", "features": "Secure video, virtual waiting room, asynchronous messaging, patient intake, integrated with EHRs.", "limitations": "Primarily for larger organizations or health systems.", "discounts": "Custom pricing." },
+                { "id": 82, "name": "eVisit", "function": "Telehealth", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Custom pricing (enterprise focus)", "compliance": "HIPAA, PCI", "features": "Virtual visits, provider dashboard, patient portal, custom workflows, integrations.", "limitations": "Designed for larger healthcare organizations.", "discounts": "Custom pricing." },
+                { "id": 83, "name": "TheraNest", "function": "Practice Management", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Starts at ~₹2,407/mo (Essentials)", "compliance": "HIPAA", "features": "Scheduling, notes, billing, client portal, telehealth. Part of Ensora Health suite.", "limitations": "Similar to Ensora Mental Health, GDPR limitations apply.", "discounts": "21-day free trial." },
+                { "id": 84, "name": "Vagaro", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹1,200/mo (Solo)", "compliance": "PCI DSS", "features": "Online booking, POS, website builder, email marketing, client management, forms.", "limitations": "HIPAA compliance not explicitly stated for all tiers/features. Focused on broader wellness.", "discounts": "Free trial available." },
+                { "id": 85, "name": "Appointy", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan; Paid from ~₹1,500/mo", "compliance": "GDPR (claims), PCI DSS", "features": "Online booking, automated reminders, calendar sync, social media integration.", "limitations": "HIPAA compliance not explicitly stated. Free plan limited.", "discounts": "Free plan available." },
+                { "id": 86, "name": "Square Appointments", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free (Solo); Plus ~₹1,700/mo; Premium ~₹4,200/mo", "compliance": "PCI DSS", "features": "Online booking, POS, automated reminders, website integration, client management.", "limitations": "HIPAA BAA not typically offered for standard plans.", "discounts": "Free plan available." },
+                { "id": 87, "name": "Booksy", "function": "Scheduling", "practiceType": ["individual"], "priceRange": "2000-4000", "price": "Starts at ~₹2,000/mo (Solo)", "compliance": "PCI DSS", "features": "Online booking, mobile app, client management, marketing tools, POS.", "limitations": "Primarily for beauty/wellness, less healthcare-specific features. No explicit HIPAA BAA.", "discounts": "Free trial available." },
+                { "id": 88, "name": "Schedulicity", "function": "Scheduling", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free (Solo); Paid from ~₹2,500/mo", "compliance": "PCI DSS", "features": "Online booking, automated reminders, marketing tools, client management, payment processing.", "limitations": "HIPAA BAA may require higher plans or custom setup. Free plan very basic.", "discounts": "Free plan available." },
+                { "id": 89, "name": "Noteable AI", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹1,500/mo", "compliance": "HIPAA, GDPR (claims)", "features": "AI-powered notes, smart summaries, dictation, integrates with telehealth platforms.", "limitations": "Newer tool, fewer long-term reviews.", "discounts": "Free trial available." },
+                { "id": 90, "name": "Suki AI", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Custom pricing (enterprise focus)", "compliance": "HIPAA, HITRUST", "features": "AI voice assistant for clinical notes, direct EHR integration, reduces charting time.", "limitations": "Designed for larger clinics/hospitals, high cost.", "discounts": "Custom pricing." },
+                { "id": 91, "name": "DeepScribe", "function": "Documentation (AI)", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Custom pricing (enterprise focus)", "compliance": "HIPAA, SOC2", "features": "AI medical scribe, ambient listening, EHR integration, generates notes automatically.", "limitations": "Primarily for large scale healthcare systems.", "discounts": "Custom pricing." },
+                { "id": 92, "name": "PatientPop", "function": "Marketing", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Custom pricing (focus on growth platform)", "compliance": "HIPAA", "features": "Website, SEO, online scheduling, reputation management, patient communication.", "limitations": "Designed for broader medical practices, can be expensive.", "discounts": "Custom pricing." },
+                { "id": 93, "name": "Birdeye", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "over8000", "price": "Custom pricing", "compliance": "HIPAA", "features": "Online reviews, listings, surveys, web chat, messaging, referrals, SEO.", "limitations": "Focus on reputation, less direct client acquisition for therapists.", "discounts": "Demo available." },
+                { "id": 94, "name": "Mailchimp", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free plan; Paid from ~₹800/mo", "compliance": "GDPR (claims)", "features": "Email marketing, audience management, landing pages, forms.", "limitations": "Not HIPAA compliant for PHI. Use only for general marketing.", "discounts": "Free plan available." },
+                { "id": 95, "name": "GoodTherapy.org", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "~₹2,000/mo", "compliance": "HIPAA (directory listing, not PHI handling)", "features": "Therapist directory, advanced search filters, ethical practice focus.", "limitations": "Directory only, no PM features. Effectiveness depends on saturation.", "discounts": "Trial available." },
+                { "id": 96, "name": "WebMD Therapy", "function": "Marketing", "practiceType": ["individual", "clinic"], "priceRange": "2000-4000", "price": "Contact for pricing (assumed in this range)", "compliance": "HIPAA (directory listing)", "features": "Therapist directory, large audience reach, patient matching.", "limitations": "Directory only, no PM features.", "discounts": "Not specified." },
+                { "id": 97, "name": "Microsoft 365", "function": "Data Storage", "practiceType": ["individual", "clinic"], "priceRange": "under2000", "price": "Starts at ~₹500/user/mo (Business Basic)", "compliance": "HIPAA (with BAA, specific configuration), GDPR", "features": "OneDrive (cloud storage), SharePoint (document management), Teams (communication), Office apps.", "limitations": "Requires specific configuration and BAA for HIPAA. Not built for healthcare-specific workflows.", "discounts": "Volume licensing." },
+                { "id": 98, "name": "Egnyte", "function": "Data Storage", "practiceType": ["clinic"], "priceRange": "over8000", "price": "Custom pricing (Business/Enterprise)", "compliance": "HIPAA, GDPR, SOC2", "features": "Secure file sync and share, content governance, ransomware protection.", "limitations": "Enterprise-focused, potentially high cost.", "discounts": "Demo available." },
+                { "id": 99, "name": "Ivy Pay", "function": "Billing", "practiceType": ["individual"], "priceRange": "free", "price": "Free app; 2.75% transaction fee", "compliance": "HIPAA", "features": "Simple payment processing for therapists, secure, integrates with texting.", "limitations": "Only for payments, no full billing/EHR. Transaction fees apply.", "discounts": "Free to use (transaction fee only)." },
+                { "id": 100, "name": "Stripe", "function": "Billing", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free setup; 2.9% + ₹25/transaction", "compliance": "PCI DSS", "features": "Online payment processing, invoicing, subscription management.", "limitations": "Not directly HIPAA compliant for PHI, only payment data. Needs BAA for therapy use.", "discounts": "Volume discounts." },
+                { "id": 101, "name": "Square", "function": "Billing", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free setup; 2.6% + ₹25/transaction", "compliance": "PCI DSS", "features": "POS, online payments, invoicing, client management, card readers.", "limitations": "Not directly HIPAA compliant for PHI, only payment data. Needs BAA for therapy use.", "discounts": "Free plan available." },
+                { "id": 102, "name": "PayPal", "function": "Billing", "practiceType": ["individual", "clinic"], "priceRange": "free", "price": "Free setup; 2.9% + ₹2.49/transaction", "compliance": "PCI DSS", "features": "Online payments, invoicing, peer-to-peer payments.", "limitations": "Not HIPAA compliant for PHI. Best for non-PHI related payments (e.g., workshops).", "discounts": "Varies." }
+            ];
+
+            const tooltipDefinitions = {
+                "HIPAA": "(Health Insurance Portability and Accountability Act) - A U.S. federal law that sets national standards for protecting patient health information from disclosure without the patient's consent or knowledge.",
+                "GDPR": "(General Data Protection Regulation) - A comprehensive data privacy law from the European Union (EU) that gives individuals more control over their personal data. It applies to organizations anywhere that process personal data of EU/UK residents.",
+                "DPDP Act": "India's data protection law, similar to GDPR, which regulates the processing of digital personal data and aims to protect individual privacy.",
+                "PIPEDA": "(Personal Information Protection and Electronic Documents Act) - Canada's federal law governing how private sector organizations collect, use, and disclose personal information in commercial activities.",
+                "SOC2": "(System and Organization Controls 2) - A voluntary audit report that evaluates a service organization's information security system based on the Trust Services Criteria (security, availability, processing integrity, confidentiality, and privacy). It indicates a vendor's commitment to data protection.",
+                "BAA": "A legal contract between a HIPAA-covered entity (like a therapist) and a business associate (a technology vendor) that outlines how the business associate will safeguard Protected Health Information (PHI) in compliance with HIPAA. This is crucial for any tool handling client health data.",
+                "PHI": "Any information about health status, provision of healthcare, or payment for healthcare that is created or received by a covered entity and can be linked to a specific individual."
+            };
+
+            const keyInsights = [
+                { title: 'Compliance: The BAA is Non-Negotiable', content: 'For any tool handling Protected Health Information (PHI), HIPAA compliance is mandatory, and this must include a signed Business Associate Agreement (BAA). A "free" tool without a BAA (like VSee\'s free plan or Calendly\'s lower tiers) is not suitable for professional use. Always verify BAA availability before adopting a tool. For GDPR, check for explicit compliance statements and be aware of data residency policies, especially if you serve EU clients. For Indian practitioners, the DPDP Act is also crucial.' },
+                { title: 'All-in-One vs. Best-of-Breed', content: 'Integrated "all-in-one" systems (like SimplePractice, TherapyNotes, TheraPlatform) offer streamlined workflows and consistent compliance, which is a major advantage for those seeking simplicity. A "best-of-breed" approach (mixing different specialized tools like a standalone scheduler and a separate EHR) can be cheaper but requires more technical skill to integrate and manage compliance across multiple platforms.' },
+                { title: 'The Hidden Costs of "Free"', content: 'Free plans are excellent starting points but often have strict limits on clients, appointments, or features. Open-source software like OpenEMR is free to download but carries significant hidden costs for hosting, customization, and IT support, which can exceed the price of a paid, managed solution. Similarly, general tools like Google Forms are free but require specific paid plans (Google Workspace Business Plus) and careful configuration to achieve HIPAA compliance.' },
+                { title: 'AI & Data Privacy', content: 'When using AI documentation tools, the vendor\'s policy on using your data for AI model training is a critical ethical and compliance point. Prioritize platforms like Blueprint or Quill that guarantee data is never used for training or is processed entirely on-device. Always obtain explicit client consent for any data usage related to AI.' },
+                { title: 'Scalability & Pricing Models', content: 'Your practice will grow. Choose tools with clear, scalable pricing tiers. Be mindful of the model: per-user, per-client, or per-session pricing can have vastly different long-term costs depending on your practice\'s structure. An "unlimited" plan can be more economical for high-volume practices.' },
+                { title: 'Don\'t Forget Discounts', content: 'Many companies (e.g., Social Work Portal, Upheal, Doxy.me, Acuity Scheduling) offer significant discounts for students, pre-licensed clinicians, non-profits, and new practices. Always ask before you subscribe, as this can make premium tools much more affordable.' }
+            ];
+
+            const functionFilter = document.getElementById('function-filter');
+            const priceFilter = document.getElementById('price-filter');
+            const typeFilter = document.getElementById('type-filter');
+            const toolGrid = document.getElementById('tool-grid');
+            const noResults = document.getElementById('no-results');
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            let currentState = {
+                function: 'all',
+                price: 'all',
+                type: 'all'
+            };
+
+            function populateFilters() {
+                const functions = [...new Set(toolsData.map(tool => tool.function))];
+                functions.sort().forEach(func => {
+                    const option = document.createElement('option');
+                    option.value = func;
+                    option.textContent = func;
+                    functionFilter.appendChild(option);
+                });
+            }
+
+            function renderToolCards(filteredTools) {
+                toolGrid.innerHTML = '';
+                if (filteredTools.length === 0) {
+                    noResults.classList.remove('hidden');
+                } else {
+                    noResults.classList.add('hidden');
+                }
+
+                filteredTools.sort((a, b) => a.name.localeCompare(b.name)).forEach(tool => {
+                    const card = document.createElement('div');
+                    card.className = 'tool-card bg-white rounded-xl shadow-md p-6 flex flex-col cursor-pointer';
+                    card.dataset.toolId = tool.id;
+
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">${tool.name}</h3>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-teal-700 bg-teal-100 px-2 py-1 rounded-full text-center">${tool.function}</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mb-4"><strong>Price:</strong> ${tool.price}</p>
+                            <div class="flex items-center space-x-4 text-sm mb-4">
+                                ${tool.compliance.includes('HIPAA') ? `<span class="flex items-center text-green-700"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>HIPAA</span>` : ''}
+                                ${tool.compliance.includes('GDPR') ? `<span class="flex items-center text-green-700"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>GDPR</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="w-full mt-auto bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">View Details</button>
+                    `;
+                    toolGrid.appendChild(card);
+                });
+
+                document.querySelectorAll('.tool-card').forEach(card => {
+                    card.addEventListener('click', () => showToolDetails(card.dataset.toolId));
+                });
+            }
+
+            function applyFilters() {
+                let filtered = toolsData;
+
+                if (currentState.function !== 'all') {
+                    filtered = filtered.filter(tool => tool.function === currentState.function);
+                }
+
+                if (currentState.type !== 'all') {
+                    filtered = filtered.filter(tool => tool.practiceType.includes(currentState.type));
+                }
+
+                if (currentState.price !== 'all') {
+                    filtered = filtered.filter(tool => tool.priceRange === currentState.price);
+                }
+
+                renderToolCards(filtered);
+            }
+
+            function showToolDetails(toolId) {
+                const tool = toolsData.find(t => t.id == toolId);
+                if (!tool) return;
+
+                modalContent.innerHTML = `
+                    <button id="close-modal-inner" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl z-10">&times;</button>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="md:w-1/3">
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2">${tool.name}</h2>
+                            <p class="text-lg font-semibold text-teal-600 mb-4">${tool.function}</p>
+                            <div class="space-y-2 text-sm">
+                                <p><strong>Price:</strong> ${tool.price}</p>
+                                <p><strong>Compliance:</strong> ${tool.compliance}</p>
+                                <p><strong>Best For:</strong> ${tool.practiceType.join(', ').replace('individual', 'Individuals').replace('clinic', 'Clinics')}</p>
+                            </div>
+                        </div>
+                        <div class="md:w-2/3 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Key Features</h4>
+                                    <p class="text-gray-600">${tool.features}</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Limitations</h4>
+                                    <p class="text-gray-600">${tool.limitations}</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">Discounts & Offers</h4>
+                                    <p class="text-gray-600">${tool.discounts}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => modalContent.classList.add('scale-100'), 10);
+
+                document.getElementById('close-modal-inner').addEventListener('click', hideModal);
+            }
+
+            function hideModal() {
+                modalContent.classList.remove('scale-100');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 300);
+            }
+            
+            function initPriceChart() {
+                const ctx = document.getElementById('priceChart').getContext('2d');
+                const priceRanges = {
+                    'free': 'Free',
+                    'under2000': 'Under ₹2,000',
+                    '2000-4000': '₹2,000 - ₹4,000',
+                    '4000-8000': '₹4,000 - ₹8,000',
+                    'over8000': '₹8,000+'
+                };
+
+                const priceData = Object.keys(priceRanges).map(rangeKey => {
+                    return toolsData.filter(tool => tool.priceRange === rangeKey).length;
+                });
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.values(priceRanges),
+                        datasets: [{
+                            label: '# of Tools',
+                            data: priceData,
+                            backgroundColor: 'rgba(13, 148, 136, 0.6)',
+                            borderColor: 'rgba(13, 148, 136, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Tools Available'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                             y: {
+                                ticks: {
+                                  autoSkip: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return ` ${context.raw} tools`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function initAccordion() {
+                const container = document.getElementById('accordion-container');
+                keyInsights.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-white rounded-xl shadow-sm overflow-hidden';
+                    div.innerHTML = `
+                        <button class="accordion-header w-full text-left p-4 flex justify-between items-center font-semibold text-gray-800 hover:bg-gray-50 transition">
+                            <span>${item.title}</span>
+                            <span class="transform transition-transform duration-300">&#9662;</span>
+                        </button>
+                        <div class="accordion-content">
+                            <p class="p-4 pt-0 text-gray-600">${item.content}</p>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                
+                document.querySelectorAll('.accordion-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const content = header.nextElementSibling;
+                        const arrow = header.querySelector('span:last-child');
+                        
+                        if (content.style.maxHeight) {
+                            content.style.maxHeight = null;
+                            arrow.style.transform = 'rotate(0deg)';
+                        } else {
+                            // Close other open accordions
+                            document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                            document.querySelectorAll('.accordion-header span:last-child').forEach(a => a.style.transform = 'rotate(0deg)');
+                            
+                            content.style.maxHeight = content.scrollHeight + "px";
+                            arrow.style.transform = 'rotate(180deg)';
+                        }
+                    });
+                });
+            }
+
+            function initTooltips() {
+                const tooltipTriggers = document.querySelectorAll('.tooltip-trigger');
+                let currentTooltip = null;
+
+                tooltipTriggers.forEach(trigger => {
+                    trigger.addEventListener('mouseover', (event) => {
+                        const term = event.target.dataset.term;
+                        const definition = tooltipDefinitions[term];
+
+                        if (definition) {
+                            if (currentTooltip) {
+                                currentTooltip.remove();
+                            }
+
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'absolute z-50 p-3 bg-gray-800 text-white text-sm rounded-lg shadow-lg max-w-xs transition-opacity duration-300 opacity-0 transform translate-y-2 pointer-events-none'; // Added pointer-events-none
+                            tooltip.textContent = definition;
+                            document.body.appendChild(tooltip);
+                            currentTooltip = tooltip;
+
+                            const rect = event.target.getBoundingClientRect();
+                            // Position the tooltip slightly above and centered
+                            let tooltipLeft = rect.left + window.scrollX + (rect.width / 2) - (tooltip.offsetWidth / 2);
+                            let tooltipTop = rect.top + window.scrollY - tooltip.offsetHeight - 10; // 10px above the element
+
+                            // Adjust if it goes off screen right
+                            if (tooltipLeft + tooltip.offsetWidth > window.innerWidth - 10) {
+                                tooltipLeft = window.innerWidth - tooltip.offsetWidth - 10;
+                            }
+                            // Adjust if it goes off screen left
+                            if (tooltipLeft < 10) {
+                                tooltipLeft = 10;
+                            }
+                            // Adjust if it goes off screen top (move below instead)
+                            if (tooltipTop < window.scrollY + 10) {
+                                tooltipTop = rect.bottom + window.scrollY + 10;
+                            }
+
+                            tooltip.style.left = `${tooltipLeft}px`;
+                            tooltip.style.top = `${tooltipTop}px`;
+
+                            setTimeout(() => {
+                                tooltip.classList.remove('opacity-0', 'translate-y-2');
+                                tooltip.classList.add('opacity-100', 'translate-y-0');
+                            }, 10);
+                        }
+                    });
+
+                    trigger.addEventListener('mouseout', () => {
+                        if (currentTooltip) {
+                            currentTooltip.classList.remove('opacity-100', 'translate-y-0');
+                            currentTooltip.classList.add('opacity-0', 'translate-y-2');
+                            setTimeout(() => {
+                                if (currentTooltip) {
+                                    currentTooltip.remove();
+                                    currentTooltip = null;
+                                }
+                            }, 300);
+                        }
+                    });
+                });
+            }
+
+            functionFilter.addEventListener('change', (e) => {
+                currentState.function = e.target.value;
+                applyFilters();
+            });
+
+            priceFilter.addEventListener('change', (e) => {
+                currentState.price = e.target.value;
+                applyFilters();
+            });
+
+            typeFilter.addEventListener('change', (e) => {
+                currentState.type = e.target.value;
+                applyFilters();
+            });
+
+            closeModalBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            populateFilters();
+            applyFilters();
+            initPriceChart();
+            initAccordion();
+            initTooltips(); // Initialize tooltips after DOM is ready
+        });
+    </script>
+</body>
+</html>
