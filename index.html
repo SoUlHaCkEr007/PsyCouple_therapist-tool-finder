@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Therapist Tech Tool Finder (With Explanatory Tooltips)</title>
+    <!-- Favicon: Add your tab icon here -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"> <!-- Or /favicon.png if you uploaded a PNG -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chosen Palette: Warm Neutrals -->
@@ -58,6 +60,12 @@
             overflow: hidden;
             transition: max-height 0.3s ease-out;
         }
+        /* Style for the logos in the nav bar */
+        .nav-logo {
+            height: 40px; /* Adjust as needed */
+            margin: 0 10px; /* Space between logo and text */
+            border-radius: 8px; /* Rounded corners for logos */
+        }
     </style>
 </head>
 <body class="text-gray-700">
@@ -65,7 +73,11 @@
     <nav class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-50">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
-                <div class="text-2xl font-bold text-gray-800">Therapist Tech<span class="text-teal-600">Finder</span></div>
+                <div class="flex items-center">
+                    <!-- First Logo -->
+                    <img src="/logo1.png" alt="Logo 1" class="nav-logo hidden sm:block"> <!-- Replace with your logo1.png path -->
+                    <div class="text-2xl font-bold text-gray-800">Therapist Tech<span class="text-teal-600">Finder</span></div>
+                </div>
                 <div class="hidden md:flex space-x-6">
                     <a href="#explorer" class="hover:text-teal-600">Tool Explorer</a>
                     <a href="#analysis" class="hover:text-teal-600">Price Analysis</a>
@@ -167,8 +179,7 @@
 
     <footer class="bg-gray-800 text-white mt-16">
         <div class="container mx-auto px-4 py-6 text-center">
-            <p>&copy; 2025 Therapist TechFinder. This interactive guide is developed as part of the Tech Support Community led by <b>PsyCouple-Nithin and Stelvy.</b></p>
-             <p>For Assistance, Contact <b>Nithin Lalachan, Psychologist, Cyber Psychology Consultant, psynithinlalachan@gmail.com</b></p>
+            <p>&copy; 2025 Therapist TechFinder. An interactive guide.</p>
         </div>
     </footer>
 
