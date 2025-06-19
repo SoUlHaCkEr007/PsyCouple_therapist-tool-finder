@@ -5,17 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PsyCouple - Therapist Tech Tool Finder</title>
     <!-- Favicon: Add your tab icon here -->
-    <link rel="icon" type="image/x-icon" href="main/newfavicon.png"> <!-- Or /favicon.png if you uploaded a PNG -->
+    <link rel="icon" type="image/x-icon" href="main/newfavicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: A user-centric, dashboard-style "Tool Finder" SPA. The core is an interactive filter system (by Function, Price, Practice Type) that dynamically updates a grid of tool "cards". Clicking a card opens a modal with detailed information. This structure was chosen over a linear report format to empower users to quickly find relevant tools based on their immediate needs and budget, which is the primary goal for the target audience (early-career therapists). The design prioritizes task completion ("find a tool") over passive reading. It's supplemented by contextual sections for Key Insights (via an accordion) and a visual Price Analysis chart to make the report's data more digestible and actionable. The initial hero section now includes a brief introduction with interactive tooltips for key compliance terms, enhancing immediate user understanding. -->
-    <!-- Visualization & Content Choices: 
-        - Report Info: Expanded list of therapist tools -> Goal: Find/Compare -> Viz/Method: Interactive Filterable Cards (HTML/JS/Tailwind) -> Interaction: Users click filters to narrow results instantly. Cards show key data; clicking reveals a detailed modal. -> Justification: Directly serves the user's primary goal of finding specific tools efficiently from a larger dataset.
-        - Report Info: Pricing Tiers Analysis -> Goal: Compare price distribution -> Viz/Method: Horizontal Bar Chart (Chart.js/Canvas) -> Interaction: Hover tooltips show the exact count of tools in each price bracket. -> Justification: Visually summarizes the expanded market landscape, making it easier to understand affordability trends.
-        - Report Info: Key Considerations for Selection -> Goal: Inform/Organize -> Viz/Method: Accordion (HTML/JS/Tailwind) -> Interaction: Users click to expand/collapse sections. -> Justification: Presents dense but crucial advisory content in a compact, manageable format, preventing information overload.
-        - Report Info: Technical/Legal Terms (HIPAA, GDPR, etc.) -> Goal: Explain -> Viz/Method: Inline text with JavaScript-powered Tooltips -> Interaction: Hover over terms to reveal definitions. -> Justification: Integrates crucial definitions directly into the introductory text, providing immediate clarification for non-technical users. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             background-color: #FDFBF7;
@@ -62,9 +54,13 @@
         }
         /* Style for the logos in the nav bar */
         .nav-logo {
-            height: 40px; /* Adjust as needed */
-            margin: 0 10px; /* Space between logo and text */
-            border-radius: 8px; /* Rounded corners for logos */
+            height: 40px;
+            min-width: 40px;
+            min-height: 40px;
+            margin: 0 10px;
+            border-radius: 8px;
+            object-fit: contain;
+            display: inline-block;
         }
     </style>
 </head>
@@ -75,8 +71,8 @@
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
                     <!-- First Logo -->
-                    <img src="Techlogo.png" 
-                    <div class="text-2xl font-bold text-gray-800">Therapist Tech<span class="text-teal-600">Finder</span></div>
+                    <img src="main/Techlogo.png" alt="Logo 1" class="nav-logo" width="40" height="40">
+                    <div class="text-2xl font-bold text-gray-800 ml-2">Therapist Tech<span class="text-teal-600">Finder</span></div>
                 </div>
                 <div class="hidden md:flex space-x-6">
                     <a href="#explorer" class="hover:text-teal-600">Tool Explorer</a>
